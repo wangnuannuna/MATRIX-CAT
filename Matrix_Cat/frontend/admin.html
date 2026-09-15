@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>矩阵猫 · 总后台</title>
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
+<script>
+// 进页面先把存的主题刷上去,不然暗色用户会被白屏闪一下眼
+(function(){ var t=localStorage.getItem('mc_theme'); if(t) document.documentElement.dataset.theme=t; })();
+</script>
+<style>
+  :root{
+    --sans:"MiSans","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    --bg:#f5f7fa;--card:#fff;--hair:#e9edf3;--line:#dfe4ec;--ink:#1b2432;--sub:#48546b;--mut:#8592a6;
+    --accent:#2f6bef;--accent-ink:#2559cf;--accent-soft:#eaf1fe;--accent-bd:#cfe0fd;
+    --grad:linear-gradient(135deg,#2f6bef,#5b8bff 55%,#7a6ff0);
+    --ok:#16a34a;--ok-soft:#e7f6ec;--fail:#e0483d;--fail-soft:#fdecea;--warn:#d98407;--warn-soft:#fdf3e3;
+    --shadow-sm:0 1px 2px rgba(27,36,50,.06);--shadow:0 1px 3px rgba(27,36,50,.06),0 6px 20px rgba(27,36,50,.06);
+    --r:10px;--r-sm:8px;
+    color-scheme:light; /* 告诉浏览器当前深浅,不然暗色下 select 下拉还是刺眼的白 */
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0f1420;--card:#1a2130;--hair:#252f40;--line:#2d394d;--ink:#e6ecf5;--sub:#aeb9cb;--mut:#7c899e;
+    --accent:#5b8bff;--accent-ink:#7ba4ff;--accent-soft:#1a2740;--accent-bd:#2b3f63;--ok-soft:#12271b;--fail-soft:#2a1917;--warn-soft:#2a2113;
+    --grad:linear-gradient(135deg,#3f74f5,#5b8bff 55%,#8f86ff);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+    color-scheme:dark;
+  }}
+  /* 手动切主题时走这两组,token 跟 console 那边保持一份口径 */
+  :root[data-theme="light"]{
+    --bg:#f5f7fa;--card:#fff;--hair:#e9edf3;--line:#dfe4ec;--ink:#1b2432;--sub:#48546b;--mut:#8592a6;
+    --accent:#2f6bef;--accent-ink:#2559cf;--accent-soft:#eaf1fe;--accent-bd:#cfe0fd;
+    --grad:linear-gradient(135deg,#2f6bef,#5b8bff 55%,#7a6ff0);
+    --ok:#16a34a;--ok-soft:#e7f6ec;--fail:#e0483d;--fail-soft:#fdecea;--warn:#d98407;--warn-soft:#fdf3e3;
+    --shadow-sm:0 1px 2px rgba(27,36,50,.06);--shadow:0 1px 3px rgba(27,36,50,.06),0 6px 20px rgba(27,36,50,.06);
+    color-scheme:light;
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1420;--card:#1a2130;--hair:#252f40;--line:#2d394d;--ink:#e6ecf5;--sub:#aeb9cb;--mut:#7c899e;
+    --accent:#5b8bff;--accent-ink:#7ba4ff;--accent-soft:#1a2740;--accent-bd:#2b3f63;--ok-soft:#12271b;--fail-soft:#2a1917;--warn-soft:#2a2113;
+    --grad:linear-gradient(135deg,#3f74f5,#5b8bff 55%,#8f86ff);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--accent-soft)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .wrap{max-width:1120px;margin:0 auto;padding:22px 20px 60px}
+  a{color:var(--accent-ink);text-decoration:none}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  /* 全站统一的胶囊导航,跟 account 那边一个模子;当前页没 href,光高亮不能点 */
+  .nav{display:flex;gap:2px;background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:3px;box-shadow:var(--shadow-sm)}
+  .nav a{padding:6px 12px;border-radius:9px;color:var(--sub);font-weight:600;font-size:13px;white-space:nowrap;transition:background-color .15s,color .15s}
+  .nav a:hover{color:var(--accent-ink);background:var(--accent-soft)}
+  .nav a.on{background:var(--accent-soft);color:var(--accent-ink)}
+  header .mark{width:30px;height:30px;border-radius:9px;box-shadow:var(--shadow-sm);flex:none}
+  header .logo{font-weight:650;font-size:18px;white-space:nowrap}
+  header .logo b{color:var(--accent)}
+  header .sp{flex:1}
+  header .who{font-size:13px;color:var(--sub)}
+
+  /* transition 只留颜色和 transform,阴影变化直接跳,省得 hover 一下整块重绘 */
+  .btn{font-size:13px;font-weight:600;border-radius:var(--r-sm);padding:7px 13px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:var(--shadow-sm);transition:border-color .15s,color .15s,background .15s,transform .15s}
+  .btn:hover{border-color:var(--accent-bd);color:var(--accent-ink)}
+  .btn:active{transform:translateY(1px)}
+  .btn.pri{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(47,107,239,.28)}
+  .btn.pri:hover{color:#fff;filter:brightness(1.06);box-shadow:0 4px 14px rgba(47,107,239,.34)}
+  .btn.sm{padding:4px 9px;font-size:12px;font-weight:500}
+  /* 删除/停用这类按钮平时就带红,不用 hover 上去才知道危险 */
+  .btn.danger{color:var(--fail)}
+  .btn.danger:hover{background:var(--fail);border-color:var(--fail);color:#fff}
+  .btn.icon{padding:7px 10px;line-height:1}
+
+  .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--hair);overflow-x:auto}
+  .tabs button{padding:10px 16px;border:0;background:none;color:var(--sub);cursor:pointer;font-weight:600;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s,background .15s;border-radius:var(--r-sm) var(--r-sm) 0 0}
+  .tabs button:hover{color:var(--accent-ink);background:var(--accent-soft)}
+  .tabs button.on{color:var(--accent-ink);border-bottom-color:var(--accent)}
+  .view{display:none} .view.on{display:block;animation:fadeUp .18s ease-out}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .kpi{position:relative;background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm);transition:transform .15s,border-color .15s}
+  .kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);border-radius:var(--r) var(--r) 0 0}
+  .kpi.g::before{background:var(--ok)} .kpi.w::before{background:var(--warn)}
+  /* hover 阴影别 transition box-shadow(重绘太贵),垫个 ::after 只动 opacity,account 同款 */
+  .kpi::after{content:"";position:absolute;inset:-1px;border-radius:inherit;box-shadow:var(--shadow);opacity:0;transition:opacity .15s;pointer-events:none}
+  .kpi:hover{transform:translateY(-2px);border-color:var(--accent-bd)}
+  .kpi:hover::after{opacity:1}
+  .kpi .v{font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .kpi .k{font-size:12px;color:var(--mut);margin-top:6px}
+  .kpi.a .v{color:var(--accent)} .kpi.g .v{color:var(--ok)} .kpi.w .v{color:var(--warn)}
+  /* 概览还没回包时先摆几张骨架卡,别让首屏空着 */
+  .kpi.sk .v,.kpi.sk .k{color:transparent;border-radius:6px;background:linear-gradient(90deg,var(--hair),var(--line),var(--hair));background-size:200% 100%;animation:shim 1.6s infinite}
+  @keyframes shim{from{background-position:200% 0}to{background-position:-200% 0}}
+
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden}
+  .toolbar{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--hair);flex-wrap:wrap}
+  input,select{padding:8px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;transition:border-color .15s;accent-color:var(--accent)}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input.mini{width:78px;text-align:right}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--hair);white-space:nowrap}
+  th{color:var(--mut);font-weight:600;font-size:11.5px;letter-spacing:.03em;position:sticky;top:0;background:var(--card);z-index:1}
+  tbody tr{transition:background .12s}
+  tbody tr:hover{background:var(--accent-soft)}
+  tbody tr:last-child td{border-bottom:0}
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tag{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;display:inline-block;line-height:1.6}
+  .tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.off{background:var(--fail-soft);color:var(--fail)}
+  .tag.paid{background:var(--ok-soft);color:var(--ok)} .tag.pending{background:var(--warn-soft);color:var(--warn)} .tag.canceled{background:var(--fail-soft);color:var(--fail)}
+  .tag.plan{background:var(--accent-soft);color:var(--accent-ink)}
+  .acts{display:flex;gap:6px}
+
+  /* 表格的加载/空态占位行 */
+  td.state{text-align:center;color:var(--mut);padding:36px 12px;white-space:normal;font-size:13px}
+  td.state:hover{background:none}
+  tr.staterow:hover{background:none}
+  td.state .eico{display:block;font-size:22px;margin-bottom:6px;opacity:.6}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--accent-bd);border-top-color:var(--accent);border-radius:50%;vertical-align:-2px;margin-right:8px;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #denied{max-width:440px;margin:12vh auto;text-align:center}
+  #denied .card{padding:32px}
+  #denied .eico{font-size:34px;margin-bottom:4px}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:999px;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:calc(100vw - 40px)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+  @media (max-width:640px){
+    .wrap{padding:14px 12px 48px}
+    header .who{display:none}
+    .nav{padding:2px}
+    .nav a{padding:6px 8px;font-size:12.5px}
+    .kpis{grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:10px}
+    th,td{padding:9px 10px}
+  }
+  /* 用户关了动画就都别动了 */
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="mark" src="/assets/logo-mark.png" alt="矩阵猫">
+    <div class="logo">矩阵<b>猫</b> · 总后台</div>
+    <nav class="nav" aria-label="站内导航">
+      <a href="/">首页</a>
+      <a href="/app">发布台</a>
+      <a href="/account">账户中心</a>
+      <a class="on" aria-current="page">总后台</a>
+    </nav>
+    <div class="sp"></div>
+    <div class="who" id="who"></div>
+    <button class="btn icon" id="themeBtn" onclick="flipTheme()" title="切换深浅色" aria-label="切换深浅色">☾</button>
+    <button class="btn" onclick="logout()">退出</button>
+  </header>
+
+  <div id="denied" hidden>
+    <div class="card">
+      <div class="eico">🚫</div>
+      <h2>无权限</h2>
+      <p style="color:var(--sub)">这个账号不是管理员,进不了总后台。</p>
+      <a class="btn pri" href="/account">回账户中心</a>
+    </div>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="tabs">
+      <button class="on" data-v="stats" onclick="tab('stats')">概览</button>
+      <button data-v="users" onclick="tab('users')">用户</button>
+      <button data-v="accounts" onclick="tab('accounts')">平台账号</button>
+      <button data-v="orders" onclick="tab('orders')">订单</button>
+      <button data-v="plans" onclick="tab('plans')">套餐</button>
+    </div>
+
+    <div id="v-stats" class="view on"><div class="kpis" id="kpis"></div></div>
+
+    <div id="v-users" class="view">
+      <div class="card">
+        <div class="toolbar">
+          <input id="uq" placeholder="搜用户名" onkeydown="if(event.key==='Enter')loadUsers()">
+          <button class="btn" onclick="loadUsers()">搜索</button>
+          <span class="num" id="ucount" style="color:var(--mut);margin-left:auto"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>ID</th><th>用户名</th><th>会员</th><th>到期</th><th>号数额度</th><th>已绑</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="users"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div id="v-accounts" class="view">
+      <div class="card">
+        <div class="toolbar">
+          <select id="aplat" onchange="loadAccounts()"><option value="">全部平台</option></select>
+          <input id="aq" placeholder="搜账号名 / 昵称" onkeydown="if(event.key==='Enter')loadAccounts()">
+          <button class="btn" onclick="loadAccounts()">搜索</button>
+          <span class="num" id="acount" style="color:var(--mut);margin-left:auto"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>ID</th><th>平台</th><th>账号</th><th>昵称</th><th>归属用户</th><th>状态</th><th>代理</th><th>登录态</th><th>操作</th></tr></thead>
+          <tbody id="accounts"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div id="v-orders" class="view">
+      <div class="card">
+        <div class="toolbar">
+          <select id="ostatus" onchange="loadOrders()">
+            <option value="">全部状态</option><option value="paid">已支付</option>
+            <option value="pending">待支付</option><option value="canceled">已取消</option>
+          </select>
+          <span class="num" id="ocount" style="color:var(--mut);margin-left:auto"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>订单号</th><th>用户</th><th>套餐</th><th>金额</th><th>状态</th><th>下单</th><th>支付</th></tr></thead>
+          <tbody id="orders"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div id="v-plans" class="view">
+      <div class="card">
+        <div class="toolbar"><b>套餐管理</b><span style="color:var(--mut);font-size:12px">改完点该行「保存」</span></div>
+        <div class="tw"><table>
+          <thead><tr><th>Code</th><th>名称</th><th>价格(元)</th><th>时长(天)</th><th>号数额度</th><th>上架</th><th></th></tr></thead>
+          <tbody id="plans"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let TOKEN = localStorage.getItem('mc_token') || '';
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200); }
+function logout(){ localStorage.removeItem('mc_token'); location.href='/account'; }
+function fmtDate(ts){ if(!ts) return '—'; const d=new Date(ts*1000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// 后端返回的文本一律先转义再塞 innerHTML,用户名带尖括号/引号也不会破事件或注入
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+// 代理脱敏:只留 host:port,把 user:pass 抹掉,别把密码铺到页面上
+function maskProxy(p){ if(!p) return '未绑代理'; let s=String(p).trim().replace(/^\w+:\/\//,''); const at=s.lastIndexOf('@'); if(at>=0) s=s.slice(at+1); return s||'已绑'; }
+
+// 主题切换,key 用 mc_theme,跟其他页共用一份
+function curDark(){ const t=document.documentElement.dataset.theme; if(t) return t==='dark'; return matchMedia('(prefers-color-scheme:dark)').matches; }
+function paintThemeBtn(){ const b=$('#themeBtn'); if(b) b.textContent=curDark()?'☀':'☾'; }
+function flipTheme(){ const t=curDark()?'light':'dark'; document.documentElement.dataset.theme=t; localStorage.setItem('mc_theme',t); paintThemeBtn(); }
+paintThemeBtn();
+
+// 表格的加载中/空态占位行,纯展示
+function busyRow(n){ return '<tr class="staterow"><td class="state" colspan="'+n+'"><span class="spin"></span>加载中…</td></tr>'; }
+function emptyRow(n,msg){ return '<tr class="staterow"><td class="state" colspan="'+n+'"><span class="eico">🗂</span>'+msg+'</td></tr>'; }
+// 接口挂了别让表格一直转圈,摆个失败态给条重试的路,fn 传 loader 的函数名
+function failRow(n,fn,e){ return '<tr class="staterow"><td class="state" colspan="'+n+'"><span class="eico">⚠️</span>加载失败:'+esc((e&&e.message)||'网络异常')+'<div style="margin-top:8px"><button class="btn sm" onclick="'+fn+'()">点击重试</button></div></td></tr>'; }
+
+async function api(path,{method='GET',body=null}={}){
+  const h={'Content-Type':'application/json'};
+  if(TOKEN) h['Authorization']='Bearer '+TOKEN;
+  const r=await fetch('/api'+path,{method,headers:h,body:body?JSON.stringify(body):null});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.detail||d.error||('HTTP '+r.status));
+  return d;
+}
+
+function tab(v){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  $('#v-'+v).classList.add('on');
+  ({stats:loadStats,users:loadUsers,accounts:loadAccounts,orders:loadOrders,plans:loadPlans})[v]();
+}
+
+async function loadStats(){
+  // 先铺骨架卡占位,回包了再换真数
+  $('#kpis').innerHTML='<div class="kpi sk"><div class="v">0</div><div class="k">加载中</div></div>'.repeat(5);
+  try{
+    const s=(await api('/admin/stats')).stats||{};
+    $('#kpis').innerHTML=`
+      <div class="kpi a"><div class="v">${s.total_users??'—'}</div><div class="k">注册用户</div></div>
+      <div class="kpi g"><div class="v">${s.active_members??'—'}</div><div class="k">有效会员</div></div>
+      <div class="kpi w"><div class="v">¥${s.revenue_yuan??'—'}</div><div class="k">累计收入</div></div>
+      <div class="kpi"><div class="v">${s.paid_orders??'—'}</div><div class="k">成交订单</div></div>
+      <div class="kpi"><div class="v">${s.total_accounts??'—'}</div><div class="k">绑定账号</div></div>`;
+  }catch(e){
+    // 概览挂了就换一张能点的卡,点了重拉
+    $('#kpis').innerHTML='<div class="kpi w" style="cursor:pointer" onclick="loadStats()"><div class="v">!</div><div class="k">加载失败,点这重试</div></div>';
+  }
+}
+
+async function loadUsers(){
+  $('#users').innerHTML=busyRow(8);
+  const q=$('#uq').value.trim();
+  let d;
+  try{ d=await api('/admin/users'+(q?('?q='+encodeURIComponent(q)):'')); }
+  catch(e){ $('#ucount').textContent=''; $('#users').innerHTML=failRow(8,'loadUsers',e); return; }
+  const us=d.users||[];
+  $('#ucount').textContent=us.length+' 人';
+  $('#users').innerHTML=us.map(u=>`<tr>
+    <td class="num">${u.id}</td>
+    <td><b>${esc(u.username)}</b>${u.is_admin?' <span class="tag plan">管理员</span>':''}${u.nickname&&u.nickname!==u.username?'<div style="color:var(--mut);font-size:11px">'+esc(u.nickname)+'</div>':''}</td>
+    <td>${u.plan_code==='free'?'<span style="color:var(--mut)">免费</span>':'<span class="tag plan">'+esc(u.plan_name)+'</span>'}</td>
+    <td class="num">${u.membership_active?fmtDate(u.plan_expires_at):'—'}</td>
+    <td class="num">${u.account_quota}</td>
+    <td class="num">${u.account_count}</td>
+    <td><span class="tag ${u.status==='active'?'ok':'off'}">${u.status==='active'?'正常':'停用'}</span></td>
+    <td><div class="acts">
+      <button class="btn sm" data-act="grant" data-id="${u.id}" data-name="${esc(u.username)}">赠会员</button>
+      <button class="btn sm" data-act="quota" data-id="${u.id}" data-quota="${u.account_quota}">额度</button>
+      <button class="btn sm" data-act="admin" data-id="${u.id}" data-admin="${u.is_admin?1:0}">${u.is_admin?'撤管理':'设管理'}</button>
+      <button class="btn sm ${u.status==='active'?'danger':''}" data-act="ustatus" data-id="${u.id}" data-status="${esc(u.status)}">${u.status==='active'?'停用':'启用'}</button>
+    </div></td></tr>`).join('') || emptyRow(8,'没有匹配的用户');
+}
+async function toggleStatus(id,cur){
+  try{ await api('/admin/users/'+id,{method:'PATCH',body:{status:cur==='active'?'disabled':'active'}}); toast('已更新'); loadUsers(); }
+  catch(e){ toast(e.message); }
+}
+async function toggleAdmin(id,cur){
+  try{ await api('/admin/users/'+id,{method:'PATCH',body:{is_admin:!cur}}); toast('已更新'); loadUsers(); }
+  catch(e){ toast(e.message); }
+}
+async function setQuota(id,cur){
+  const v=prompt('设置该用户可绑账号数',cur); if(v===null) return;
+  try{ await api('/admin/users/'+id,{method:'PATCH',body:{account_quota:parseInt(v)||0}}); toast('已更新'); loadUsers(); }
+  catch(e){ toast(e.message); }
+}
+async function grant(id,name){
+  const code=prompt('给 '+name+' 开通套餐 code(basic/pro/flagship/free)','pro'); if(!code) return;
+  const days=prompt('时长(天,留空按套餐默认)','');
+  try{ await api('/admin/users/'+id+'/grant',{method:'POST',body:{plan_code:code.trim(),days:days?parseInt(days):null}}); toast('已开通'); loadUsers(); }
+  catch(e){ toast(e.message); }
+}
+
+async function loadOrders(){
+  $('#orders').innerHTML=busyRow(7);
+  const s=$('#ostatus').value;
+  let d;
+  try{ d=await api('/admin/orders'+(s?('?status='+s):'')); }
+  catch(e){ $('#ocount').textContent=''; $('#orders').innerHTML=failRow(7,'loadOrders',e); return; }
+  const os=d.orders||[];
+  $('#ocount').textContent=os.length+' 单';
+  $('#orders').innerHTML=os.map(o=>`<tr>
+    <td class="num">${esc(o.out_trade_no)}</td><td>${esc(o.username||o.user_id)}</td><td>${esc(o.plan_name)}</td>
+    <td class="num">¥${esc(o.amount_yuan)}</td>
+    <td><span class="tag ${o.status==='paid'?'paid':o.status==='pending'?'pending':'canceled'}">${o.status==='paid'?'已支付':o.status==='pending'?'待支付':'已取消'}</span></td>
+    <td class="num">${fmtDate(o.created_at)}</td><td class="num">${fmtDate(o.paid_at)}</td></tr>`).join('')
+    || emptyRow(7,'还没有这类订单');
+}
+
+async function loadPlans(){
+  $('#plans').innerHTML=busyRow(7);
+  let d;
+  try{ d=await api('/admin/plans'); }
+  catch(e){ $('#plans').innerHTML=failRow(7,'loadPlans',e); return; }
+  $('#plans').innerHTML=(d.plans||[]).map(p=>`<tr data-code="${esc(p.code)}">
+    <td class="num">${esc(p.code)}</td><td>${esc(p.name)}</td>
+    <td><input class="mini pp" value="${esc(p.price_yuan)}"></td>
+    <td><input class="mini pd" value="${esc(p.duration_days)}"></td>
+    <td><input class="mini pq" value="${esc(p.account_quota)}"></td>
+    <td><input type="checkbox" class="pa" ${p.active!==false?'checked':''}></td>
+    <td><button class="btn sm pri" data-act="saveplan">保存</button></td></tr>`).join('') || emptyRow(7,'暂无套餐');
+}
+async function savePlan(tr){
+  const code=tr.dataset.code;
+  try{
+    await api('/admin/plans/'+encodeURIComponent(code),{method:'PATCH',body:{
+      price_cents:Math.round(parseFloat(tr.querySelector('.pp').value)*100),
+      duration_days:parseInt(tr.querySelector('.pd').value),
+      account_quota:parseInt(tr.querySelector('.pq').value),
+      active:tr.querySelector('.pa').checked }});
+    toast('已保存'); loadPlans();
+  }catch(e){ toast(e.message); }
+}
+
+// ===== 平台账号(跨用户)=====
+let ADMIN_PLATS=null, ADMIN_ACCTS=[];
+async function ensurePlats(){
+  if(ADMIN_PLATS) return;
+  try{ ADMIN_PLATS=await api('/platforms'); }catch(e){ ADMIN_PLATS=[]; }
+  if(!Array.isArray(ADMIN_PLATS)) ADMIN_PLATS=[];
+  $('#aplat').innerHTML='<option value="">全部平台</option>'+ADMIN_PLATS.map(p=>`<option value="${esc(p.name)}">${esc(p.label||p.name)}</option>`).join('');
+}
+async function loadAccounts(){
+  $('#accounts').innerHTML=busyRow(9);
+  await ensurePlats();
+  const plat=$('#aplat').value, q=$('#aq').value.trim();
+  const qs=[]; if(plat)qs.push('platform='+encodeURIComponent(plat)); if(q)qs.push('q='+encodeURIComponent(q));
+  let d;
+  try{ d=await api('/admin/accounts'+(qs.length?('?'+qs.join('&')):'')); }
+  catch(e){ $('#acount').textContent=''; $('#accounts').innerHTML=failRow(9,'loadAccounts',e); return; }
+  ADMIN_ACCTS=d.accounts||[];
+  $('#acount').textContent=ADMIN_ACCTS.length+' 个';
+  $('#accounts').innerHTML=ADMIN_ACCTS.map(a=>{
+    const on=a.status!=='disabled';
+    const login=a.cooling?'<span class="tag pending">冷却</span>':(a.logged_in?'<span class="tag ok">在线</span>':'<span class="tag off">离线</span>');
+    return `<tr>
+      <td class="num">${a.id}</td>
+      <td>${esc(a.platform)}</td>
+      <td>${esc(a.account_id)}</td>
+      <td>${esc(a.nickname||'—')}</td>
+      <td>${esc(a.owner_username||a.owner_id||'—')}</td>
+      <td><span class="tag ${on?'ok':'off'}">${on?'启用':'停用'}</span></td>
+      <td class="num" style="max-width:150px;overflow:hidden;text-overflow:ellipsis">${esc(maskProxy(a.proxy))}</td>
+      <td>${login}</td>
+      <td><div class="acts">
+        <button class="btn sm" data-act="proxy" data-id="${a.id}">改代理</button>
+        <button class="btn sm ${on?'danger':''}" data-act="status" data-id="${a.id}" data-status="${esc(a.status)}">${on?'停用':'启用'}</button>
+        <button class="btn sm danger" data-act="del" data-id="${a.id}" data-label="${esc(a.account_id)}">删除</button>
+      </div></td></tr>`;
+  }).join('') || emptyRow(9,'没有匹配的账号');
+}
+async function delAccount(id,label){
+  if(!confirm('删除账号 '+label+'?此操作不可撤销,该号要重新扫码登录。')) return;
+  try{ await api('/admin/accounts/'+id,{method:'DELETE'}); toast('已删除'); loadAccounts(); }
+  catch(e){ toast(e.message); }
+}
+async function toggleAcctStatus(id,cur){
+  try{ await api('/admin/accounts/'+id,{method:'PATCH',body:{status:cur==='active'?'disabled':'active'}}); toast(cur==='active'?'已停用':'已启用'); loadAccounts(); }
+  catch(e){ toast(e.message); }
+}
+async function editAcctProxy(id){
+  const a=ADMIN_ACCTS.find(x=>String(x.id)===String(id)); const cur=a?(a.proxy||''):'';
+  const v=prompt('设置该号绑定的固定代理(留空 = 清除)\nhttp://user:pass@host:port', cur); if(v===null) return;
+  try{ await api('/admin/accounts/'+id,{method:'PATCH',body:{proxy:v.trim()}}); toast('代理已更新'); loadAccounts(); }
+  catch(e){ toast(e.message); }
+}
+
+// 事件委托:动态行的按钮统一在这里取 data-* 派发,不再往 onclick 拼后端字符串
+$('#users').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return; const id=b.dataset.id;
+  if(b.dataset.act==='grant') grant(id,b.dataset.name);
+  else if(b.dataset.act==='quota') setQuota(id,b.dataset.quota);
+  else if(b.dataset.act==='admin') toggleAdmin(id,b.dataset.admin==='1');
+  else if(b.dataset.act==='ustatus') toggleStatus(id,b.dataset.status);
+});
+$('#plans').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act="saveplan"]'); if(!b) return; savePlan(b.closest('tr'));
+});
+$('#accounts').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return; const id=b.dataset.id;
+  if(b.dataset.act==='del') delAccount(id,b.dataset.label);
+  else if(b.dataset.act==='status') toggleAcctStatus(id,b.dataset.status);
+  else if(b.dataset.act==='proxy') editAcctProxy(id);
+});
+
+(async()=>{
+  if(!TOKEN){ location.href='/account'; return; }
+  let me;
+  try{ me=(await api('/auth/me')).user; }
+  catch(e){ location.href='/account'; return; }
+  if(!me.is_admin){ $('#denied').hidden=false; return; }
+  $('#who').textContent=me.nickname||me.username;
+  $('#panel').hidden=false;
+  loadStats();
+})();
+</script>
+</body>
+</html>

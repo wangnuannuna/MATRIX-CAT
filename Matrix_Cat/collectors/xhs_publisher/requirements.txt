@@ -1,0 +1,6 @@
+# 小红书登录+发布 依赖
+cloakbrowser>=0.3.32      # 指纹浏览器(C++级真指纹)；本机 conda313 已装
+curl_cffi>=0.15.0         # COS 直传用的 Chrome TLS 指纹 HTTP 客户端
+pillow>=10.0.0            # 量图片真实宽高/大小
+qrcode>=7.0              # 无头登录时把二维码渲染成 PNG(可选)
+# opencv-python           # 可选：探视频宽高/时长/帧率(装了 note 体更贴真机；没装退占位)

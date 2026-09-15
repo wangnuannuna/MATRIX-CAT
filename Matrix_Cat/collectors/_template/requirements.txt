@@ -1,0 +1,4 @@
+# 协议直连 + 签名。装在 conda313 里(本机基线)。
+curl_cffi>=0.7          # 带 Chrome TLS/JA3 指纹的 HTTP,替代 requests
+cryptography>=42        # 自算签名平台要(ECDH/HKDF);纯 AWS4/hmac 平台其实不用装
+cloakbrowser>=0.3.32    # 登录/浏览器加签用的 C++ 级指纹浏览器(一号一设备)

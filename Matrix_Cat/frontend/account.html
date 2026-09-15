@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>矩阵猫 · 账户中心</title>
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
+<script>
+// 提前把存过的主题拍到 html 上,不然暗色用户进来会白一下(闪瞎)
+(function(){var t=localStorage.getItem('mc_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);})();
+</script>
+<style>
+  /* 设计语言跟 index.html / console.html 一套:清爽轻奢浅蓝,这版走克制路线 */
+  :root{
+    --sans:"MiSans","HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+    --bg:#f5f7fa;--panel:#fbfcfe;--card:#fff;--hair:#e9edf3;--line:#dfe4ec;
+    --ink:#1b2432;--sub:#48546b;--mut:#8592a6;
+    --accent:#2f6bef;--accent-ink:#2559cf;--accent-soft:#eaf1fe;--accent-bd:#cfe0fd;
+    --violet:#7a6ff0;
+    --grad:linear-gradient(135deg,#2f6bef,#5b8bff 55%,#7a6ff0);
+    /* 会员实体卡的底,比品牌渐变压深一档,稳重 */
+    --grad-deep:linear-gradient(135deg,#1d3fa4 0%,#2b5cd8 52%,#5f53ce 100%);
+    --grad-slate:linear-gradient(135deg,#3d4759 0%,#4d5a72 60%,#5b6478 100%);
+    --ok:#16a34a;--ok-soft:#e7f6ec;--fail:#e0483d;--fail-soft:#fdecea;
+    --shadow-sm:0 1px 2px rgba(27,36,50,.06);--shadow:0 1px 3px rgba(27,36,50,.06),0 6px 20px rgba(27,36,50,.06);
+    --shadow-md:0 10px 30px rgba(27,54,120,.10);--shadow-lg:0 24px 70px rgba(27,54,120,.18);
+    --r:10px;--r-sm:8px;--r-lg:18px;--r-card:16px;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#0f1420;--panel:#151b28;--card:#1a2130;--hair:#252f40;--line:#2d394d;--ink:#e6ecf5;--sub:#aeb9cb;--mut:#7c899e;
+    --accent:#5b8bff;--accent-ink:#7ba4ff;--accent-soft:#1a2740;--accent-bd:#2b3f63;--violet:#8f86ff;
+    --grad:linear-gradient(135deg,#3f74f5,#5b8bff 55%,#8f86ff);
+    --grad-deep:linear-gradient(135deg,#24479f 0%,#3161d2 52%,#6156c4 100%);
+    --grad-slate:linear-gradient(135deg,#333c4d 0%,#414c61 60%,#4d5568 100%);
+    --ok-soft:#12271b;--fail-soft:#2a1917;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+    --shadow-md:0 10px 30px rgba(0,0,0,.38);--shadow-lg:0 30px 80px rgba(0,0,0,.55);
+  }}
+  /* 手动切主题走 data-theme,要能压过系统偏好(基础色值抄的 console.html,别自己发挥) */
+  :root[data-theme="light"]{
+    --bg:#f5f7fa;--panel:#fbfcfe;--card:#fff;--hair:#e9edf3;--line:#dfe4ec;--ink:#1b2432;--sub:#48546b;--mut:#8592a6;
+    --accent:#2f6bef;--accent-ink:#2559cf;--accent-soft:#eaf1fe;--accent-bd:#cfe0fd;--violet:#7a6ff0;
+    --grad:linear-gradient(135deg,#2f6bef,#5b8bff 55%,#7a6ff0);
+    --grad-deep:linear-gradient(135deg,#1d3fa4 0%,#2b5cd8 52%,#5f53ce 100%);
+    --grad-slate:linear-gradient(135deg,#3d4759 0%,#4d5a72 60%,#5b6478 100%);
+    --ok-soft:#e7f6ec;--fail-soft:#fdecea;
+    --shadow-sm:0 1px 2px rgba(27,36,50,.06);--shadow:0 1px 3px rgba(27,36,50,.06),0 6px 20px rgba(27,36,50,.06);
+    --shadow-md:0 10px 30px rgba(27,54,120,.10);--shadow-lg:0 24px 70px rgba(27,54,120,.18);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1420;--panel:#151b28;--card:#1a2130;--hair:#252f40;--line:#2d394d;--ink:#e6ecf5;--sub:#aeb9cb;--mut:#7c899e;
+    --accent:#5b8bff;--accent-ink:#7ba4ff;--accent-soft:#1a2740;--accent-bd:#2b3f63;--violet:#8f86ff;
+    --grad:linear-gradient(135deg,#3f74f5,#5b8bff 55%,#8f86ff);
+    --grad-deep:linear-gradient(135deg,#24479f 0%,#3161d2 52%,#6156c4 100%);
+    --grad-slate:linear-gradient(135deg,#333c4d 0%,#414c61 60%,#4d5568 100%);
+    --ok-soft:#12271b;--fail-soft:#2a1917;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow:0 1px 3px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+    --shadow-md:0 10px 30px rgba(0,0,0,.38);--shadow-lg:0 30px 80px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 16px 80px}
+  a{color:var(--accent-ink);text-decoration:none}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  ::selection{background:color-mix(in srgb,var(--accent) 24%,transparent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  :focus:not(:focus-visible){outline:none}
+
+  /* 背景就一点极淡的品牌色光晕,再淡都行,千万别花 */
+  .aura{position:fixed;inset:-10% -10% auto -10%;height:70%;z-index:-1;pointer-events:none;opacity:.26}
+  .aura i{position:absolute;border-radius:50%;opacity:.35;will-change:transform;animation:drift 26s ease-in-out infinite alternate}
+  .aura i:nth-child(1){width:560px;height:560px;left:-10%;top:-14%;background:radial-gradient(circle,var(--accent),transparent 70%)}
+  .aura i:nth-child(2){width:480px;height:480px;right:-8%;top:-6%;background:radial-gradient(circle,var(--violet),transparent 70%);animation-delay:-9s}
+  @keyframes drift{to{transform:translate3d(24px,-24px,0) scale(1.05)}}
+
+  /* ---- 顶栏:品牌 + 胶囊导航 ---- */
+  header{display:flex;align-items:center;gap:12px;margin-bottom:32px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;color:var(--ink);letter-spacing:-.01em}
+  .brand img{width:26px;height:26px;border-radius:7px;box-shadow:var(--shadow-sm)}
+  .brand b{color:var(--accent)}
+  .brand small{font-weight:600;font-size:10.5px;color:var(--mut);letter-spacing:.14em;margin-left:2px}
+  header .sp{flex:1}
+  /* 全站统一的一组导航,当前页点不了(没 href)光高亮 */
+  .nav{display:flex;gap:2px;background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:3px;box-shadow:var(--shadow-sm)}
+  .nav a{padding:6px 12px;border-radius:9px;color:var(--sub);font-weight:600;font-size:13px;white-space:nowrap;transition:background-color .15s,color .15s}
+  .nav a:hover{color:var(--accent-ink);background:var(--accent-soft)}
+  .nav a.on{background:var(--accent-soft);color:var(--accent-ink)}
+  .nav a[hidden]{display:none}
+
+  /* ---- 个人横幅:不套卡,靠留白和字号立层级 ---- */
+  .hero{display:flex;align-items:center;gap:16px;margin:8px 2px 28px;flex-wrap:wrap}
+  .avatar{width:56px;height:56px;border-radius:16px;background:var(--grad);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(47,107,239,.25);flex:none;user-select:none}
+  .hero-name{font-size:23px;font-weight:700;letter-spacing:-.02em;line-height:1.25;display:flex;align-items:center;gap:8px}
+  .hero-sub{font-size:12px;color:var(--mut);margin-top:2px}
+  .chip{font-size:10.5px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent-bd);padding:1px 8px;border-radius:20px;letter-spacing:.02em}
+  .hero .sp{flex:1}
+  .hero-right{text-align:right}
+  .plan-pill{display:inline-block;font-size:12px;font-weight:700;padding:4px 13px;border-radius:20px;background:var(--grad);color:#fff}
+  .plan-pill.free{background:var(--hair);color:var(--sub)}
+  .hero-exp{font-size:11.5px;color:var(--mut);margin-top:5px}
+
+  /* ---- 卡片基座:hairline 描边 + 极轻阴影;hover 阴影走 ::after 垫层只动透明度 ---- */
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r-card);box-shadow:var(--shadow-sm);padding:24px;position:relative;transition:border-color .22s}
+  .card::after{content:"";position:absolute;inset:-1px;border-radius:inherit;box-shadow:var(--shadow);opacity:0;transition:opacity .22s;pointer-events:none}
+  .card:hover::after{opacity:1}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  @media (max-width:720px){.grid2{grid-template-columns:1fr}}
+  .card h2{font-size:15px;font-weight:700;margin:0 0 16px;letter-spacing:-.01em}
+  .card h2 .sub{font-weight:400;color:var(--mut);font-size:12px;margin-left:8px;letter-spacing:0}
+
+  label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px;font-weight:600}
+  input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;transition:border-color .15s}
+  input::placeholder{color:var(--mut);opacity:.7}  /* 别用浏览器默认灰,暗色下发灰发脏 */
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input[readonly]{color:var(--mut);cursor:not-allowed}
+  input[readonly]:focus{border-color:var(--line);box-shadow:none}
+
+  .btn{font-family:var(--sans);font-size:13.5px;font-weight:600;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);box-shadow:var(--shadow-sm);transition:transform .18s,color .18s,border-color .18s,background-color .18s;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+  .btn:hover{border-color:var(--accent-bd);color:var(--accent-ink);transform:translateY(-1px)}
+  /* 主按钮上品牌渐变,hover 渐变滑过去;阴影收着点,别糊一圈光 */
+  .btn.pri{border:0;background:var(--grad);background-size:160% 100%;background-position:0 0;color:#fff;box-shadow:0 2px 10px rgba(47,107,239,.20);transition:background-position .4s ease,transform .18s}
+  .btn.pri:hover{color:#fff;background-position:100% 0;transform:translateY(-1px)}
+  .btn:active{transform:translateY(0) scale(.97);transition-duration:.06s}
+  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+  .btn.icon{padding:9px;width:36px;height:36px}
+  .btn.icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .btn.pri:focus-visible{outline-color:var(--ink);outline-offset:3px}
+  .row{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;flex:none}
+  .btn:not(.pri) .spin{border-color:color-mix(in srgb,var(--accent) 35%,transparent);border-top-color:var(--accent)}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ---- 会员实体卡:整页的排面担当 ---- */
+  .memcard{position:relative;border-radius:20px;padding:24px;min-height:216px;color:#fff;overflow:hidden;background:var(--grad-deep);box-shadow:0 14px 36px rgba(29,63,164,.28);display:flex;flex-direction:column;justify-content:space-between}
+  .memcard.free{background:var(--grad-slate);box-shadow:0 14px 36px rgba(50,60,80,.28)}
+  /* 静态的斜向光泽,一道亮一道虚,像卡面镀膜;不做扫光动画 */
+  .memcard::before{content:"";position:absolute;inset:0;pointer-events:none;background:
+    linear-gradient(115deg,transparent 42%,rgba(255,255,255,.10) 47%,rgba(255,255,255,.03) 53%,transparent 58%),
+    linear-gradient(115deg,transparent 66%,rgba(255,255,255,.05) 70%,transparent 76%)}
+  .mc-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:relative}
+  .mc-label{font-size:10.5px;font-weight:600;letter-spacing:.16em;color:rgba(255,255,255,.62)}
+  .mc-plan{font-size:24px;font-weight:800;letter-spacing:-.01em;margin-top:4px}
+  .mc-exp{font-size:11.5px;color:rgba(255,255,255,.75);white-space:nowrap;padding-top:3px}
+  .mc-bot{align-items:flex-end}
+  .mc-mark{font-size:9.5px;font-weight:700;letter-spacing:.26em;color:rgba(255,255,255,.45)}
+  .mc-hint{font-size:12px;color:rgba(255,255,255,.85);margin-top:6px}
+  .ringwrap{position:relative;width:68px;height:68px;flex:none}
+  .ringwrap svg{width:100%;height:100%;display:block}
+  .ringwrap .bgc{stroke:rgba(255,255,255,.22)}
+  /* 环形进度只动 dashoffset,不碰布局;数值居中摆环里 */
+  .ringwrap .fgc{stroke:#fff;transition:stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1)}
+  .ringtxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px}
+  .ringtxt b{font-size:15px;font-weight:700}
+  .ringtxt span{color:rgba(255,255,255,.7)}
+
+  /* ---- 套餐档 ---- */
+  .plans{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+  .plan-c{border:1px solid var(--line);border-radius:var(--r-card);padding:18px 16px 16px;display:flex;flex-direction:column;gap:8px;background:var(--bg);position:relative;transition:transform .2s,border-color .2s}
+  .plan-c::after{content:"";position:absolute;inset:-1px;border-radius:inherit;box-shadow:var(--shadow-md);opacity:0;transition:opacity .2s;pointer-events:none}
+  .plan-c:hover{transform:translateY(-2px);border-color:var(--accent-bd)}
+  .plan-c:hover::after{opacity:1}
+  /* 当前档:一圈 1px 渐变细描边(双背景裁切那招),比粗框高级 */
+  .plan-c.cur{border-color:transparent;background:linear-gradient(var(--card),var(--card)) padding-box,var(--grad) border-box}
+  .plan-c .badge{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:700;padding:2px 11px;border-radius:20px;white-space:nowrap;letter-spacing:.02em}
+  .plan-c .badge.hot{background:var(--grad);color:#fff;box-shadow:0 3px 8px rgba(47,107,239,.28)}
+  .plan-c .badge.now{background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent-bd)}
+  .plan-c .nm{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+  .plan-c .pr{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:27px;font-weight:700;color:var(--ink);letter-spacing:-.03em}
+  .plan-c.cur .pr{color:var(--accent)}
+  .plan-c .pr small{font-size:11.5px;color:var(--mut);font-weight:400;font-family:var(--sans);letter-spacing:0}
+  .plan-c .ds{font-size:12.5px;color:var(--sub);flex:1}
+  .plan-c .q{font-size:12px;color:var(--mut)}
+  .plan-c .btn{margin-top:4px}
+
+  /* ---- 订单:行距放宽,订单号弱化,状态小胶囊(点+字) ---- */
+  .tbl-wrap{overflow-x:auto;margin:0 -4px;padding:0 4px}  /* 手机上宽了就横滑,别把整页撑破 */
+  table{width:100%;min-width:520px;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--hair)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr{transition:background-color .15s}
+  tbody tr:hover{background:var(--bg)}
+  th{color:var(--mut);font-weight:600;font-size:11px;letter-spacing:.08em}
+  td.no{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--mut)}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:var(--hair);color:var(--sub)}
+  .tag::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+  .tag.paid{background:var(--ok-soft);color:var(--ok)}
+  .tag.pending{background:var(--fail-soft);color:var(--fail)}
+  .empty-box{text-align:center;padding:34px 0 26px;color:var(--mut)}
+  .empty-box svg{width:38px;height:38px;stroke:var(--mut);fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;opacity:.65;margin-bottom:8px}
+  .empty-box p{margin:0;font-weight:600;color:var(--sub)}
+  .empty-box span{font-size:12px}
+  .empty-box .btn{margin-top:10px}
+  tr.emptyrow:hover{background:transparent}
+
+  /* ---- 登录/注册:居中一张卡,留白给足,输入 44 高 ---- */
+  .authbox{max-width:420px;margin:9vh auto 0}
+  .authbox .card{border-radius:var(--r-lg);box-shadow:var(--shadow-lg);padding:36px 32px;animation:pop .28s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}}
+  .ah{font-weight:800;font-size:22px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;margin-bottom:4px}
+  .ah img{width:28px;height:28px;border-radius:8px}
+  .ah b{color:var(--accent)}
+  .asub{font-size:12.5px;color:var(--mut);margin:0 0 22px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;background:var(--bg);padding:4px;border-radius:11px}
+  .tabs button{flex:1;padding:9px;border:0;background:transparent;color:var(--mut);border-radius:8px;cursor:pointer;font-weight:600;font-family:var(--sans);font-size:14px;transition:background-color .15s,color .15s}
+  .tabs button.on{background:var(--card);color:var(--accent-ink);box-shadow:var(--shadow-sm)}
+
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(8px);background:var(--card);color:var(--ink);border:1px solid var(--hair);border-left:3px solid var(--accent);padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:opacity .22s,transform .22s cubic-bezier(.2,.7,.2,1);pointer-events:none;max-width:calc(100vw - 40px);z-index:80}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hint{font-size:12px;color:var(--mut);margin-top:10px}
+
+  /* 晕动症用户关掉飘来飘去那些 */
+  @media (prefers-reduced-motion:reduce){
+    .aura i{animation:none}
+    .authbox .card{animation:none}
+    .btn,.btn.pri,.plan-c,.card,.card::after,.plan-c::after,.ringwrap .fgc,#toast{transition:none}
+    .btn:hover,.btn.pri:hover,.plan-c:hover{transform:none}
+  }
+  @media (max-width:560px){
+    .nav a{padding:6px 9px;font-size:12.5px}
+    .hero{gap:12px;margin-bottom:24px}
+    .avatar{width:48px;height:48px;font-size:20px;border-radius:14px}
+    .hero-name{font-size:19px}
+    .hero-right{text-align:left;width:100%;display:flex;align-items:center;gap:10px}
+    .hero-exp{margin-top:0}
+    .authbox{margin-top:4vh}
+    .authbox .card{padding:28px 22px}
+  }
+</style>
+</head>
+<body>
+<div class="aura"><i></i><i></i></div>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/"><img src="/assets/logo-mark.png" alt="矩阵猫" loading="lazy" decoding="async">矩阵<b>猫</b><small>账户中心</small></a>
+    <nav class="nav" aria-label="站内导航">
+      <a href="/">首页</a>
+      <a href="/app">发布台</a>
+      <a class="on" aria-current="page">账户中心</a>
+      <a id="adminlink" href="/admin" hidden>总后台</a>
+    </nav>
+    <div class="sp"></div>
+    <button class="btn icon" id="themeBtn" onclick="flipTheme()" title="切换深浅色" aria-label="切换深浅色"></button>
+    <button class="btn" id="logout" hidden onclick="logout()">退出</button>
+  </header>
+
+  <!-- 未登录 -->
+  <section id="auth" class="authbox">
+    <div class="card">
+      <div class="ah"><img src="/assets/logo-mark.png" alt="" loading="lazy" decoding="async">矩阵<b>猫</b></div>
+      <div class="asub">登录后管理资料、会员与订单</div>
+      <div class="tabs">
+        <button id="tab-login" class="on" onclick="switchTab('login')">登录</button>
+        <button id="tab-reg" onclick="switchTab('reg')">注册</button>
+      </div>
+      <div id="pane-login">
+        <label>手机号</label><input id="li-user" inputmode="tel" placeholder="注册时用的手机号" autocomplete="username">
+        <label>密码</label><input id="li-pass" type="password" autocomplete="current-password">
+        <div class="row"><button class="btn pri" id="li-go" style="flex:1;padding:12px" onclick="doLogin()">登录</button></div>
+        <div class="hint">用手机号登录(老账号用用户名也行)。</div>
+      </div>
+      <div id="pane-reg" hidden>
+        <label>手机号</label><input id="rg-phone" inputmode="tel" placeholder="11 位手机号">
+        <label>密码 <span style="color:var(--mut)">(≥6 位)</span></label><input id="rg-pass" type="password">
+        <label>昵称 <span style="color:var(--mut)">(选填)</span></label><input id="rg-nick">
+        <div class="row"><button class="btn pri" id="rg-go" style="flex:1;padding:12px" onclick="doReg()">注册并登录</button></div>
+        <div class="hint">手机号即账号。第一个注册的账号自动成为管理员。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 已登录 -->
+  <section id="dash" hidden>
+    <!-- 个人横幅:进来先看清我是谁、什么身份 -->
+    <div class="hero">
+      <div class="avatar" id="av">·</div>
+      <div>
+        <div class="hero-name"><span id="hero-nick">—</span><span class="chip" id="hero-admin" hidden>管理员</span></div>
+        <div class="hero-sub" id="hero-phone"></div>
+      </div>
+      <div class="sp"></div>
+      <div class="hero-right">
+        <span class="plan-pill" id="hero-plan">—</span>
+        <div class="hero-exp" id="hero-exp"></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>我的资料 <span class="sub">改完点保存</span></h2>
+        <label>用户名</label><input id="pf-user" readonly>
+        <label>昵称</label><input id="pf-nick">
+        <label>邮箱</label><input id="pf-email">
+        <label>手机号</label><input id="pf-phone">
+        <div class="row"><button class="btn pri" onclick="saveProfile(this)">保存信息</button></div>
+        <label style="margin-top:22px">修改密码</label>
+        <input id="pf-oldpw" type="password" placeholder="原密码" style="margin-bottom:8px">
+        <input id="pf-newpw" type="password" placeholder="新密码(≥6 位)">
+        <div class="row"><button class="btn" onclick="changePw(this)">更新密码</button></div>
+      </div>
+
+      <!-- 会员实体卡 -->
+      <div class="memcard" id="memcard">
+        <div class="mc-row">
+          <div>
+            <div class="mc-label">当前套餐</div>
+            <div class="mc-plan" id="m-plan">—</div>
+          </div>
+          <div class="mc-exp" id="m-exp"></div>
+        </div>
+        <div class="mc-row mc-bot">
+          <div>
+            <div class="mc-mark">MATRIX&nbsp;CAT</div>
+            <div class="mc-hint" id="m-hint"></div>
+          </div>
+          <div class="ringwrap" title="账号额度">
+            <svg viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="bgc" cx="22" cy="22" r="19" fill="none" stroke-width="3.6"/>
+              <circle class="fgc" id="m-ring" cx="22" cy="22" r="19" fill="none" stroke-width="3.6" stroke-linecap="round"
+                stroke-dasharray="119.4" stroke-dashoffset="119.4" transform="rotate(-90 22 22)"/>
+            </svg>
+            <div class="ringtxt"><b id="m-used">0</b><span>/</span><span id="m-quota">1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>会员套餐 <span class="sub">按可绑账号数分档</span></h2>
+      <div class="plans" id="plans"></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>订单记录</h2>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>订单号</th><th>套餐</th><th>金额</th><th>状态</th><th>时间</th></tr></thead>
+        <tbody id="orders"><tr><td colspan="5" style="color:var(--mut)">暂无</td></tr></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let TOKEN = localStorage.getItem('mc_token') || '';
+const NEXT = new URLSearchParams(location.search).get('next');
+function goNext(){ if(NEXT && /^\/[a-zA-Z0-9/_-]*$/.test(NEXT)){ location.href=NEXT; return true; } return false; }  // 只放行同站路径,防开放重定向
+
+// ---- 主题切换(纯 UI,不碰业务) ----
+// 没手动选过就跟系统走;点一下按当前实际效果取反,存进 mc_theme
+const SUN='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.4"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5 5l1.7 1.7M17.3 17.3 19 19M19 5l-1.7 1.7M6.7 17.3 5 19"/></svg>';
+const MOON='<svg viewBox="0 0 24 24"><path d="M20.4 14.2A8.4 8.4 0 0 1 9.8 3.6a8.4 8.4 0 1 0 10.6 10.6z"/></svg>';
+function curTheme(){
+  const forced=document.documentElement.getAttribute('data-theme');
+  if(forced) return forced;
+  return matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+}
+function paintThemeBtn(){ $('#themeBtn').innerHTML = curTheme()==='dark'?SUN:MOON; }
+function flipTheme(){
+  const next = curTheme()==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('mc_theme',next);
+  paintThemeBtn();
+}
+paintThemeBtn();
+
+// ---- 按钮转圈,防手抖连点 ----
+function busy(btn,txt){ if(!btn||btn.disabled)return false; btn.dataset.txt=btn.textContent; btn.disabled=true; btn.innerHTML='<span class="spin"></span>'+txt; return true; }
+function unbusy(btn){ if(!btn||!btn.dataset.txt)return; btn.disabled=false; btn.textContent=btn.dataset.txt; delete btn.dataset.txt; }
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200); }
+
+async function api(path, {method='GET', body=null}={}){
+  const h={'Content-Type':'application/json'};
+  if(TOKEN) h['Authorization']='Bearer '+TOKEN;
+  const r=await fetch('/api'+path,{method,headers:h,body:body?JSON.stringify(body):null});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.detail||d.error||('HTTP '+r.status));
+  return d;
+}
+
+function switchTab(t){
+  $('#tab-login').classList.toggle('on',t==='login');
+  $('#tab-reg').classList.toggle('on',t==='reg');
+  $('#pane-login').hidden = t!=='login';
+  $('#pane-reg').hidden = t!=='reg';
+}
+
+// 回车即提交(修「输入完只能鼠标点击才能进去」):登录框回车→doLogin,注册框回车→doReg
+['li-user','li-pass'].forEach(id=>$('#'+id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); doLogin(); } }));
+['rg-phone','rg-pass','rg-nick'].forEach(id=>$('#'+id).addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); doReg(); } }));
+
+async function doLogin(){
+  const go=$('#li-go');
+  if(!busy(go,'登录中…')) return;   // 已经在转就别再发一遍
+  try{
+    const d=await api('/auth/login',{method:'POST',body:{username:$('#li-user').value.trim(),password:$('#li-pass').value}});
+    setToken(d.token); toast('登录成功'); if(goNext())return; showDash();
+  }catch(e){ toast(e.message); }
+  finally{ unbusy(go); }
+}
+async function doReg(){
+  const phone=$('#rg-phone').value.trim();
+  if(!/^1\d{10}$/.test(phone)) return toast('请输入 11 位手机号');
+  const go=$('#rg-go');
+  if(!busy(go,'注册中…')) return;
+  try{
+    const d=await api('/auth/register',{method:'POST',body:{
+      username:phone, phone:phone, password:$('#rg-pass').value, nickname:$('#rg-nick').value.trim()||null}});
+    setToken(d.token); toast('注册成功'); if(goNext())return; showDash();
+  }catch(e){ toast(e.message); }
+  finally{ unbusy(go); }
+}
+function setToken(t){ TOKEN=t; localStorage.setItem('mc_token',t); }
+function logout(){ TOKEN=''; localStorage.removeItem('mc_token'); location.reload(); }
+
+function fmtDate(ts){ if(!ts) return '—'; const d=new Date(ts*1000); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+async function showDash(){
+  $('#auth').hidden=true; $('#dash').hidden=false; $('#logout').hidden=false;
+  // 三块各自兜底,一块挂了别把整页拖死(plans/orders 内部自己 catch 了)
+  await Promise.all([
+    loadMe().catch(e=>{ toast('资料加载失败:'+e.message); $('#m-hint').textContent='会员信息没拉到,刷新页面重试'; }),
+    loadPlans(), loadOrders()
+  ]);
+}
+
+let ME=null, MEM=null;
+async function loadMe(){
+  const d=await api('/auth/me'); ME=d.user; MEM=d.membership;
+  const name=ME.nickname||ME.username;
+  // 横幅:头像就取名字头一个字,垫渐变底
+  $('#av').textContent=((name||'?').trim().charAt(0)||'?').toUpperCase();
+  $('#hero-nick').textContent=name;
+  $('#hero-admin').hidden=!ME.is_admin;
+  $('#hero-phone').textContent=ME.phone||ME.username;
+  $('#adminlink').hidden = !ME.is_admin;
+  $('#pf-user').value=ME.username; $('#pf-nick').value=ME.nickname||'';
+  $('#pf-email').value=ME.email||''; $('#pf-phone').value=ME.phone||'';
+  renderMem();
+}
+const RING_C=119.4;  // 2πr,r=19,写死省得每次算
+function renderMem(){
+  const m=MEM, isFree=m.plan_code==='free';
+  const expTxt = m.active ? ('到期 '+fmtDate(m.expires_at)) : (isFree?'':'已过期');
+  // 实体卡
+  $('#m-plan').textContent=m.plan_name;
+  $('#m-exp').textContent=expTxt;
+  $('#memcard').classList.toggle('free',isFree);
+  $('#m-used').textContent=m.used; $('#m-quota').textContent=m.quota;
+  // 先是空环,下一帧再转到实际比例,填充动画只动 dashoffset 不重排
+  const ratio=Math.min(1, m.quota? m.used/m.quota : 0);
+  requestAnimationFrame(()=>{ $('#m-ring').style.strokeDashoffset=(RING_C*(1-ratio)).toFixed(1); });
+  $('#m-hint').textContent = '还能再绑 '+m.remaining+' 个账号';
+  // 横幅右侧的套餐徽章同步一份
+  const pill=$('#hero-plan'); pill.textContent=m.plan_name; pill.classList.toggle('free',isFree);
+  $('#hero-exp').textContent=expTxt;
+}
+async function loadPlans(){
+  const box=$('#plans');
+  let d;
+  try{ d=await api('/plans'); }
+  catch(e){
+    // 接口挂了别留一片空白让人以为没套餐,给个重试口
+    box.innerHTML=`<div class="empty-box" style="grid-column:1/-1"><p>套餐加载失败</p><span>网络或服务开小差了</span><br><button class="btn" onclick="loadPlans()">点击重试</button></div>`;
+    return;
+  }
+  box.innerHTML=d.plans.map(p=>{
+    const cur = MEM && MEM.plan_code===p.code;
+    const free = p.code==='free' || p.price_cents<=0;
+    const hot = p.code==='pro' && !cur;   // 推荐标跟落地页定价区一致,已是当前套餐就不用推了
+    return `<div class="plan-c ${cur?'cur':''}">
+      ${cur?'<span class="badge now">当前套餐</span>':hot?'<span class="badge hot">推荐</span>':''}
+      <div class="nm">${p.name}</div>
+      <div class="pr">${free?'免费':'¥'+p.price_yuan}${free?'':'<small>/'+p.duration_days+'天</small>'}</div>
+      <div class="ds">${p.description}</div>
+      <div class="q">可绑 ${p.account_quota} 个账号</div>
+      <button class="btn ${free?'':'pri'}" ${free?'disabled':''} onclick="buy(this,'${p.code}','${p.name}',${p.price_yuan})">${free?'默认':cur?'续费':'购买'}</button>
+    </div>`;
+  }).join('');
+}
+async function loadOrders(){
+  const tb=$('#orders');
+  let d;
+  try{ d=await api('/membership/orders'); }
+  catch(e){
+    tb.innerHTML=`<tr class="emptyrow"><td colspan="5"><div class="empty-box">
+      <p>订单加载失败</p><span>网络或服务开小差了</span><br>
+      <button class="btn" onclick="loadOrders()">点击重试</button>
+    </div></td></tr>`;
+    return;
+  }
+  if(!d.orders.length){
+    tb.innerHTML=`<tr class="emptyrow"><td colspan="5"><div class="empty-box">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M4 7l2-3h12l2 3M9.5 11.5a2.5 2.5 0 0 0 5 0"/></svg>
+      <p>还没有订单</p><span>开通任意套餐后,每一笔都会记在这里</span>
+    </div></td></tr>`;
+    return;
+  }
+  tb.innerHTML=d.orders.map(o=>`<tr>
+    <td class="no">${o.out_trade_no}</td><td>${o.plan_name}</td><td class="num">¥${o.amount_yuan}</td>
+    <td><span class="tag ${o.status}">${o.status==='paid'?'已支付':o.status==='pending'?'待支付':'已取消'}</span></td>
+    <td class="num">${fmtDate(o.paid_at||o.created_at)}</td></tr>`).join('');
+}
+
+async function buy(btn,code,name,yuan){
+  if(!confirm('购买【'+name+'】,应付 ¥'+yuan+'\n(演示环境走模拟支付,点确定即视为付款成功)')) return;
+  if(!busy(btn,'开通中…')) return;
+  try{
+    const d=await api('/membership/purchase',{method:'POST',body:{plan_code:code}});
+    // 真支付时:跳 d.pay_url 的二维码,等网关回调。这里模拟直接确认。
+    await api('/membership/pay',{method:'POST',body:{out_trade_no:d.order.out_trade_no}});
+    toast('开通成功:'+name);
+    await Promise.all([loadMe(), loadPlans(), loadOrders()]);
+  }catch(e){ toast(e.message); unbusy(btn); }
+  // 成功路径不用恢复:loadPlans 会整块重画,按钮已经是新的了
+}
+
+async function saveProfile(btn){
+  if(!busy(btn,'保存中…')) return;   // 这俩也套上转圈,跟登录那边一个待遇
+  try{
+    await api('/auth/me',{method:'PATCH',body:{
+      nickname:$('#pf-nick').value.trim(), email:$('#pf-email').value.trim(), phone:$('#pf-phone').value.trim()}});
+    toast('已保存'); await loadMe();
+  }catch(e){ toast(e.message); }
+  finally{ unbusy(btn); }
+}
+async function changePw(btn){
+  const oldp=$('#pf-oldpw').value, newp=$('#pf-newpw').value;
+  if(!oldp||!newp) return toast('原密码/新密码都要填');
+  if(!busy(btn,'更新中…')) return;
+  try{
+    await api('/auth/password',{method:'POST',body:{old_password:oldp,new_password:newp}});
+    $('#pf-oldpw').value=''; $('#pf-newpw').value=''; toast('密码已更新');
+  }catch(e){ toast(e.message); }
+  finally{ unbusy(btn); }
+}
+
+// 进页面:有 token 直接进面板,失效则退回登录
+(async()=>{
+  if(!TOKEN) return;
+  try{ await api('/auth/me'); }catch(e){ logout(); return; }   // token 没坏才继续
+  if(goNext()) return;                                         // 带 ?next(从发布台弹来)登录后直接回去
+  await showDash();
+})();
+</script>
+</body>
+</html>

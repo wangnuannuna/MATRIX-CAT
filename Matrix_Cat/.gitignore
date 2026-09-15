@@ -1,0 +1,27 @@
+# python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+
+# 每号会话 / cookie / storage_state / CloakBrowser profile(登录态 = 账号凭证)——绝不进 git
+storage/data/
+collectors/*/data/
+**/profiles/
+**/_uploads/
+*.tmp
+
+# 秘密材料 / 抓包(含活 cookie/token/sessionid)——绝不进 git
+.secrets_*.json
+*.secrets.json
+/netcap.json
+/netcap.json.all.json
+
+# IDE
+/.vs/
+/.idea/
+*.user
+
+# logs
+*.log

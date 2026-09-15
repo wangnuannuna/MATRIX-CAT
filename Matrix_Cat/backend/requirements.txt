@@ -1,0 +1,12 @@
+# Matrix_Cat 后端(编排层)。装在 conda313(和采集同环境)。
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+pydantic-settings
+python-multipart          # 表单/文件上传
+cryptography              # 凭证加密(Fernet)
+alembic                   # 数据库迁移(生产)
+httpx                     # AI 文案优化(国内供应商 OpenAI 兼容接口,直连)
+anthropic                 # AI 文案优化(仅 provider=claude 时需要)
+# 生产用 Postgres 再装(开发默认 SQLite,无需):
+# psycopg2-binary

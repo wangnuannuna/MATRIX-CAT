@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matrix_Cat 项目结构</title>
+<style>
+  :root {
+    --bg: #e9edf2;
+    --grid: #dbe2ea;
+    --panel: #ffffff;
+    --panel-2: #f3f6f9;
+    --ink: #172230;
+    --ink-dim: #3d4b5c;
+    --muted: #5f7183;
+    --line: #d3dbe4;
+    --line-strong: #b9c5d1;
+    --accent: #0d8a80;
+    --accent-ink: #0a6b63;
+    --accent-soft: rgba(13,138,128,.10);
+    --shadow: 0 1px 2px rgba(20,35,55,.05), 0 8px 30px rgba(20,35,55,.06);
+    /* layer tags */
+    --t-runner: #b7802f;
+    --t-fe: #3d7fc4;
+    --t-be: #6d6ad4;
+    --t-co: #2f9d76;
+    --t-st: #c06152;
+    --t-base: #607689;
+    --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b121b;
+      --grid: #131e2b;
+      --panel: #121d2a;
+      --panel-2: #0e1824;
+      --ink: #dce7f1;
+      --ink-dim: #aebccb;
+      --muted: #7d92a6;
+      --line: #223141;
+      --line-strong: #2c4053;
+      --accent: #43cabb;
+      --accent-ink: #6ad9cc;
+      --accent-soft: rgba(67,202,187,.12);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 34px rgba(0,0,0,.34);
+      --t-runner: #d69f52;
+      --t-fe: #63a2e6;
+      --t-be: #9491ef;
+      --t-co: #48bd90;
+      --t-st: #db8072;
+      --t-base: #86a0b6;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #e9edf2; --grid: #dbe2ea; --panel: #fff; --panel-2: #f3f6f9;
+    --ink: #172230; --ink-dim: #3d4b5c; --muted: #5f7183; --line: #d3dbe4; --line-strong: #b9c5d1;
+    --accent: #0d8a80; --accent-ink: #0a6b63; --accent-soft: rgba(13,138,128,.10);
+    --shadow: 0 1px 2px rgba(20,35,55,.05), 0 8px 30px rgba(20,35,55,.06);
+    --t-runner:#b7802f; --t-fe:#3d7fc4; --t-be:#6d6ad4; --t-co:#2f9d76; --t-st:#c06152; --t-base:#607689;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b121b; --grid: #131e2b; --panel: #121d2a; --panel-2: #0e1824;
+    --ink: #dce7f1; --ink-dim: #aebccb; --muted: #7d92a6; --line: #223141; --line-strong: #2c4053;
+    --accent: #43cabb; --accent-ink: #6ad9cc; --accent-soft: rgba(67,202,187,.12);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 34px rgba(0,0,0,.34);
+    --t-runner:#d69f52; --t-fe:#63a2e6; --t-be:#9491ef; --t-co:#48bd90; --t-st:#db8072; --t-base:#86a0b6;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: clamp(24px, 5vw, 60px) clamp(16px, 4vw, 40px) 72px; }
+
+  /* ---------- header ---------- */
+  header { margin-bottom: 44px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent-ink); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--mono); font-weight: 650; font-size: clamp(34px, 6vw, 52px);
+    letter-spacing: -.02em; margin: 0 0 14px; color: var(--ink); text-wrap: balance;
+  }
+  h1 .u { color: var(--muted); }
+  .lede { font-size: clamp(15px, 2.2vw, 17px); color: var(--ink-dim); max-width: 60ch; margin: 0 0 22px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .fact {
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-dim);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 7px; padding: 6px 11px;
+  }
+  .fact b { color: var(--accent-ink); font-weight: 600; }
+
+  .runcmd {
+    margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 13.5px;
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 11px 15px; box-shadow: var(--shadow);
+  }
+  .runcmd .prompt { color: var(--accent); }
+  .runcmd .arrow { color: var(--muted); }
+  .runcmd .url { color: var(--ink); }
+
+  /* ---------- section ---------- */
+  section { margin-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 22px; }
+  .sec-num { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); letter-spacing: .1em; }
+  h2 { font-family: var(--mono); font-weight: 600; font-size: 19px; letter-spacing: -.01em; margin: 0; }
+  .sec-sub { color: var(--muted); font-size: 13.5px; margin-left: auto; text-align: right; }
+
+  /* ---------- schematic (the layered call diagram) ---------- */
+  .schematic {
+    border: 1.5px solid var(--line-strong); border-radius: 14px;
+    background: var(--panel-2); padding: 16px; box-shadow: var(--shadow); position: relative;
+  }
+  .runner-tab {
+    position: absolute; top: -11px; left: 20px;
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em;
+    background: var(--bg); color: var(--t-runner); border: 1.5px solid var(--line-strong);
+    border-radius: 20px; padding: 3px 12px;
+  }
+  .runner-tab b { color: var(--ink); font-weight: 600; }
+  .stack { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+
+  .node {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 13px 16px; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    position: relative;
+  }
+  .node .tag {
+    font-family: var(--mono); font-size: 12.5px; font-weight: 600; letter-spacing: .01em;
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  }
+  .node .tag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--dot); flex: none; }
+  .node .path { font-family: var(--mono); font-size: 12.5px; color: var(--accent-ink); }
+  .node .desc { color: var(--muted); font-size: 13px; margin-left: auto; text-align: right; }
+  .node.fe { --dot: var(--t-fe); }
+  .node.be { --dot: var(--t-be); }
+  .node.co { --dot: var(--t-co); }
+  .node.st { --dot: var(--t-st); }
+
+  .wire {
+    align-self: center; font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    padding: 7px 0; display: flex; align-items: center; gap: 8px;
+  }
+  .wire::before { content: "↓"; color: var(--accent); font-size: 15px; font-weight: 700; }
+  .wire b { color: var(--accent-ink); font-weight: 600; }
+
+  .foundation {
+    margin-top: 10px; border: 1px dashed var(--line-strong); border-radius: 10px;
+    background: repeating-linear-gradient(-45deg, transparent, transparent 8px, var(--accent-soft) 8px, var(--accent-soft) 9px);
+    padding: 13px 16px;
+  }
+  .foundation .flabel {
+    font-family: var(--mono); font-size: 11.5px; color: var(--t-base); letter-spacing: .05em;
+    text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .foundation .flabel::before { content:""; width:9px; height:9px; border-radius:50%; background: var(--t-base); }
+  .base-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .base-cell { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 13px; }
+  .base-cell .bt { font-family: var(--mono); font-weight: 600; font-size: 13px; color: var(--ink); }
+  .base-cell .bd { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+
+  /* ---------- runtime flow ---------- */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+  .step {
+    flex: 1 1 150px; min-width: 140px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 13px 14px; box-shadow: var(--shadow); position: relative;
+  }
+  .step .sn { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; }
+  .step .st { font-family: var(--mono); font-weight: 600; font-size: 13.5px; margin: 5px 0 4px; }
+  .step .sd { color: var(--muted); font-size: 12.5px; }
+  .step .sd code { font-family: var(--mono); color: var(--ink-dim); font-size: 11.5px; }
+  .flow .sep { align-self: center; color: var(--accent); font-weight: 700; font-family: var(--mono); }
+
+  /* ---------- layer detail cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 16px; box-shadow: var(--shadow); border-top: 3px solid var(--ct, var(--line));
+  }
+  .card.l-fe { --ct: var(--t-fe); } .card.l-be { --ct: var(--t-be); }
+  .card.l-co { --ct: var(--t-co); } .card.l-st { --ct: var(--t-st); }
+  .card.l-sh { --ct: var(--t-base); } .card.l-cf { --ct: var(--t-base); }
+  .card h3 {
+    font-family: var(--mono); font-size: 15px; margin: 0 0 3px; display: flex; align-items: baseline; gap: 9px;
+  }
+  .card h3 .cn { color: var(--muted); font-weight: 500; font-size: 12.5px; }
+  .card .role { color: var(--ink-dim); font-size: 13px; margin: 0 0 14px; }
+  .files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .files li { display: grid; grid-template-columns: minmax(0,auto) 1fr; gap: 10px; align-items: baseline; }
+  .files .fn { font-family: var(--mono); font-size: 12.5px; color: var(--accent-ink); white-space: nowrap; }
+  .files .fd { color: var(--muted); font-size: 12.5px; }
+
+  /* ---------- add platform / footer ---------- */
+  .addp {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  pre.code {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-dim);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; margin: 0 0 14px; overflow-x: auto;
+  }
+  pre.code .c { color: var(--muted); }
+  ol.steps { margin: 0; padding-left: 20px; color: var(--ink-dim); font-size: 13.5px; }
+  ol.steps li { margin: 5px 0; }
+  ol.steps code { font-family: var(--mono); font-size: 12px; color: var(--accent-ink); }
+
+  .note {
+    margin-top: 18px; font-size: 12.5px; color: var(--muted);
+    border-left: 3px solid var(--line-strong); padding: 4px 0 4px 14px;
+  }
+  .note b { color: var(--ink-dim); font-weight: 600; }
+  footer {
+    margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+
+  @media (max-width: 720px) {
+    .cards { grid-template-columns: 1fr; }
+    .base-row { grid-template-columns: 1fr; }
+    .node .desc { margin-left: 0; text-align: left; width: 100%; }
+    .flow .sep { display: none; }
+    .sec-sub { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .node, .step, .card { transition: transform .15s ease, box-shadow .15s ease; }
+    .card:hover { transform: translateY(-2px); }
+  }
+  a { color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">多平台爬虫 · 自动发布</p>
+    <h1>Matrix_Cat<span class="u"> / 项目结构</span></h1>
+    <p class="lede">Python 框架。协议直连（<b>curl_cffi</b> + 自算签名），登录用 CloakBrowser 指纹浏览器。四层清晰:前端 / 后端 / 采集 / 存储,加两个横切层,最外层一个运行程序。</p>
+    <div class="facts">
+      <span class="fact"><b>协议优先</b> 自算签名 + curl 直连,非 RPA</span>
+      <span class="fact"><b>CloakBrowser</b> 一号一 profile</span>
+      <span class="fact"><b>已落地</b> 小红书</span>
+      <span class="fact"><b>拉平</b> 全在项目根,无 crawler_spider 层</span>
+    </div>
+    <div class="runcmd">
+      <span><span class="prompt">$</span> python run.py</span>
+      <span class="arrow">→</span>
+      <span class="url">网页总控台 http://127.0.0.1:8799</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <h2>分层调用关系</h2>
+      <span class="sec-sub">运行程序在最外层 · 四层向下调用 · 全部立在 shared+config 基座上</span>
+    </div>
+    <div class="schematic">
+      <span class="runner-tab">运行程序 · 最外层 &nbsp;<b>run.py</b> / 启动.bat</span>
+      <div class="stack">
+        <div class="node fe">
+          <span class="tag">前端 frontend</span>
+          <span class="path">index.html</span>
+          <span class="desc">网页总控台 UI · inline JS · 只打 /api/*</span>
+        </div>
+        <div class="wire">HTTP · <b>POST /api/login · /api/publish</b></div>
+        <div class="node be">
+          <span class="tag">后端 backend</span>
+          <span class="path">server.py</span>
+          <span class="desc">aiohttp · 平台适配器注册表 <code>_ADAPTERS</code></span>
+        </div>
+        <div class="wire">经适配器桥到平台 · <b>from xhs import …</b></div>
+        <div class="node co">
+          <span class="tag">采集 collectors</span>
+          <span class="path">&lt;平台&gt;_publisher/</span>
+          <span class="desc">每平台一个:登录 + 发布(xhs 已落地)</span>
+        </div>
+        <div class="wire">读 / 写账号会话 · <b>storage_state</b></div>
+        <div class="node st">
+          <span class="tag">存储 storage</span>
+          <span class="path">session_store · data/</span>
+          <span class="desc">通用 AccountStore · 落盘 / 去重 / 风控冷却</span>
+        </div>
+        <div class="foundation">
+          <div class="flabel">基座 · 所有层都 import</div>
+          <div class="base-row">
+            <div class="base-cell">
+              <div class="bt">shared/</div>
+              <div class="bd">http(curl_cffi 会话+代理路由)· signing(签名原语)· io_utf8 · paths</div>
+            </div>
+            <div class="base-cell">
+              <div class="bt">config/settings.py</div>
+              <div class="bd">全局配置:UA · CloakBrowser · 代理(KDL 只收北京)· 超时</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <h2>一次发布走过的路</h2>
+      <span class="sec-sub">网页 → 后端适配器 → 采集平台 → 平台服务器 → 回传 note_id</span>
+    </div>
+    <div class="flow">
+      <div class="step">
+        <div class="sn">01 前端</div>
+        <div class="st">选号 · 填内容</div>
+        <div class="sd">标题 / 正文 / 图 → <code>POST /api/publish</code> (multipart)</div>
+      </div>
+      <span class="sep">→</span>
+      <div class="step">
+        <div class="sn">02 后端</div>
+        <div class="st">适配器分发</div>
+        <div class="sd">按 platform 取 <code>XhsAdapter</code> · 存素材到 storage/data/uploads</div>
+      </div>
+      <span class="sep">→</span>
+      <div class="step">
+        <div class="sn">03 采集</div>
+        <div class="st">publish.py 编排</div>
+        <div class="sd">校验号态(a1/b1)→ cos 直传 → note 拼体 → signer 加签</div>
+      </div>
+      <span class="sep">→</span>
+      <div class="step">
+        <div class="sn">04 平台</div>
+        <div class="st">小红书服务器</div>
+        <div class="sd">返回 <code>note_id / url</code> · 一路回传到网页</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <h2>各层详解</h2>
+      <span class="sec-sub">文件 : 干什么</span>
+    </div>
+    <div class="cards">
+      <div class="card l-fe">
+        <h3>前端 <span class="cn">frontend/</span></h3>
+        <p class="role">网页总控台的界面。纯前端,不含逻辑。</p>
+        <ul class="files">
+          <li><span class="fn">index.html</span><span class="fd">选号 / 填标题正文图 / 发布;inline JS,只 fetch /api/*</span></li>
+        </ul>
+      </div>
+      <div class="card l-be">
+        <h3>后端 <span class="cn">backend/</span></h3>
+        <p class="role">aiohttp 服务,把各平台统一成一套网页接口。</p>
+        <ul class="files">
+          <li><span class="fn">server.py</span><span class="fd">适配器注册表 _ADAPTERS + /api/login·publish·accounts;serve 前端</span></li>
+        </ul>
+      </div>
+      <div class="card l-co">
+        <h3>采集 <span class="cn">collectors/</span></h3>
+        <p class="role">每平台一个自包含文件夹,登录 + 发布。</p>
+        <ul class="files">
+          <li><span class="fn">xhs_publisher/</span><span class="fd">小红书:run.py(CLI)+ xhs/(下方)+ tests + data/</span></li>
+          <li><span class="fn">xhs/browser·login</span><span class="fd">CloakBrowser 扫码登录 + 页内 _webmsxyw 签名机</span></li>
+          <li><span class="fn">xhs/cos·note·publish</span><span class="fd">COS 直传素材 · 拼笔记体 · 发布编排</span></li>
+          <li><span class="fn">xhs/signer·accounts</span><span class="fd">x-s 签名 · AccountStore + a1/b1 指纹契约</span></li>
+          <li><span class="fn">_template/</span><span class="fd">新平台起手模板(复制改名即用)</span></li>
+        </ul>
+      </div>
+      <div class="card l-st">
+        <h3>存储 <span class="cn">storage/</span></h3>
+        <p class="role">账号会话的持久化层。</p>
+        <ul class="files">
+          <li><span class="fn">session_store.py</span><span class="fd">通用 AccountStore:json 落盘 + 按 user_id 去重 + 风控冷却</span></li>
+          <li><span class="fn">data/uploads/</span><span class="fd">网页上传的临时素材(不进 git)</span></li>
+        </ul>
+      </div>
+      <div class="card l-sh">
+        <h3>shared <span class="cn">公共 · 跨层复用</span></h3>
+        <p class="role">各层共用的工具,别重复造。</p>
+        <ul class="files">
+          <li><span class="fn">http.py</span><span class="fd">curl_cffi 会话工厂 + 代理路由(境内直连 / 海外走 VPN)</span></li>
+          <li><span class="fn">signing.py</span><span class="fd">sha256 / hmac / hkdf / ecdh-p256 / aws4 / base64(对过标准向量)</span></li>
+          <li><span class="fn">io_utf8 · paths</span><span class="fd">utf-8 控制台引导 + logging · data 目录约定</span></li>
+        </ul>
+      </div>
+      <div class="card l-cf">
+        <h3>config <span class="cn">全局配置</span></h3>
+        <p class="role">可调项集中一处,别处只 import。</p>
+        <ul class="files">
+          <li><span class="fn">settings.py</span><span class="fd">UA · CloakBrowser 参数 · curl 指纹 · 代理(KDL 北京出口)· 超时</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <h2>加一个新平台</h2>
+      <span class="sec-sub">三步接进网页总控台</span>
+    </div>
+    <div class="addp">
+      <pre class="code"><span class="c">:: 复制模板,改包名</span>
+xcopy /E /I collectors\_template collectors\douyin_publisher
+cd collectors\douyin_publisher &amp; ren pkg douyin</pre>
+      <ol class="steps">
+        <li>填 <code>douyin/config.py</code>:<code>PLATFORM</code> · <code>COOKIE_DOMAIN</code> · 域名接口路径。</li>
+        <li>补 <code>login / signer / uploader / content / publish</code> 里的 TODO(config、accounts 已接好 shared + storage)。</li>
+        <li>在 <code>backend/server.py</code> 的 <code>_ADAPTERS</code> 加一条适配器 → 自动接进网页总控台。</li>
+      </ol>
+      <p class="note"><b>数据落盘两处:</b> 每个平台的 accounts.json + CloakBrowser profiles 在 <code>collectors/&lt;平台&gt;_publisher/data/</code>;网页上传素材在 <code>storage/data/uploads/</code>。两处都在 .gitignore,登录态 = 账号凭证,绝不进 git。</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Matrix_Cat · Python 爬虫 / 自动发布</span>
+    <span>依赖 curl_cffi · cryptography · cloakbrowser · aiohttp</span>
+  </footer>
+</div>
+</body>
+</html>
