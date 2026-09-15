@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlalchemy>=2.0
+aiosqlite
+redis
+pyjwt
+argon2-cffi
+pydantic-settings
+httpx
+# 上线用 PostgreSQL 时再装:
+# asyncpg
